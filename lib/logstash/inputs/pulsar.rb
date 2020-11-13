@@ -18,6 +18,10 @@ class LogStash::Inputs::Pulsar < LogStash::Inputs::Base
   #
   # Service URL provider for Pulsar service. Default is None.
   config :service_url, :validate => :string, :default => "pulsar://localhost:6650"
+  # Proxy service URL. Default is None.
+  config :proxy_service_url, :validate => :string
+  # Proxy protocol. e.g. SNI. Default is None.
+  config :proxy_protocol, :validate => :string
   # Name of the authentication plugin. Default is None.
   config :auth_plugin_class_name, :validate => :string
   # String represents parameters for the authentication plugin. Example: key1:val1,key2:val2. Default is None.
@@ -182,12 +186,14 @@ class LogStash::Inputs::Pulsar < LogStash::Inputs::Base
   config :consumer_threads, :validate => :number, :default => 1
   config :decorate_events, :validate => :boolean, :default => false
 
+  PLUGIN_VERSION = "0.2.0"
+
 
   public
   def register
     logger.info("Registering logstash-input-pulsar")
     @host = Socket.gethostname
-    @version = "0.1.0"
+    @version = PLUGIN_VERSION
     @runner_threads = []
   end # def register
 
@@ -218,6 +224,8 @@ class LogStash::Inputs::Pulsar < LogStash::Inputs::Base
       # Configure Pulsar Client loadconf
       client_config = java.util.HashMap.new
       client_config.put("serviceUrl", @service_url)
+      client_config.put("proxyServiceUrl", @proxy_service_url) unless @proxy_service_url.nil?
+      client_config.put("proxyProtocol", @proxy_protocol) unless @proxy_protocol.nil?
       client_config.put("authPluginClassName", @auth_plugin_class_name) unless @auth_plugin_class_name.nil?
       client_config.put("authParams", @auth_params) unless @auth_params.nil?
       client_config.put("operationTimeoutMs", @operation_timeout_ms) unless @operation_timeout_ms.nil?
@@ -355,7 +363,7 @@ class LogStash::Inputs::Pulsar < LogStash::Inputs::Base
                 event.set("[@metadata][pulsar][topic]", record.getTopicName)
                 event.set("[@metadata][pulsar][producer]", record.getProducerName)
                 event.set("[@metadata][pulsar][key]", record.getKey) if record.hasKey
-                event.set("[@metadata][pulsar][timestamp]", record.getEventTime) unless record.getEventTime == 0
+                event.set("[@metadata][pulsar][timestamp]", record.getPublishTime)
               end
               logstash_queue << event
               consumer.acknowledge(record)

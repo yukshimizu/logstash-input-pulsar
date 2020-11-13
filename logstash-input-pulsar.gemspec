@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name          = 'logstash-input-pulsar'
-  s.version       = '0.1.0'
+  s.version       = '0.2.0'
   s.licenses      = ['Apache-2.0']
   s.summary       = 'Read events from Pulsar topic'
   s.description   = 'This gem is a Logstash plugin required to be installed on top of the Logstash core pipeline using $LS_HOME/bin/logstash-plugin install gemname. This gem is not a stand-alone program'
@@ -19,6 +19,7 @@ Gem::Specification.new do |s|
 
   # Jar dependencies
   s.requirements << "jar 'org.apache.pulsar:pulsar-client', '2.6.1'"
+  s.requirements << "jar 'org.apache.pulsar:pulsar-client-auth-athenz', '2.6.1'"
   s.add_development_dependency 'jar-dependencies'
   s.add_runtime_dependency 'jar-dependencies'
 

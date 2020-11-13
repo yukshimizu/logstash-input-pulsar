@@ -47,9 +47,16 @@ bundle exec rspec --tag unit
 
 - Run integration tests
 
-You need to have access to Pulsar instance. The easiest way is to setup a standalone Pulsar locally. Please refer to https://pulsar.apache.org/docs/en/standalone for more information.
+You need to have access to a Pulsar instance. The easiest way is to setup a standalone Pulsar locally. Please refer to https://pulsar.apache.org/docs/en/standalone for more information.
 ```sh
 bundle exec rspec --tag integration
+```
+
+- Run integration tests with athenz deployment
+
+You need to have access to a Pulsar instance, which is configured with an athenz deployment. Please refer to https://pulsar.apache.org/docs/en/security-athenz for more information.
+```sh
+bundle exec rspec --tag athenz
 ```
 
 ### 2. Running your unpublished Plugin in Logstash

@@ -9,6 +9,7 @@ RSpec.describe "LogStash::Inputs::Pulsar", :integration => true do
 
   let(:timeout_seconds) { 30 }
   let(:num_events) { 10 }
+  let(:service_url) { "pulsar+ssl://localhost:6651" } #If testing TLS-less environment, set "pulsar://localhost:6650"
 
   subject(:pulsar) { LogStash::Inputs::Pulsar.new(config) }
 
@@ -30,7 +31,7 @@ RSpec.describe "LogStash::Inputs::Pulsar", :integration => true do
 
     let(:config) {
       {
-          "service_url" => "pulsar://localhost:6650",
+          "service_url" => service_url,
           "topics_name" => ["logstashE"],
           "subscription_name" => "logstash-group-exclusive",
           "subscription_type" => "Exclusive",
@@ -70,7 +71,7 @@ RSpec.describe "LogStash::Inputs::Pulsar", :integration => true do
 
     let(:config) {
       {
-          "service_url" => "pulsar://localhost:6650",
+          "service_url" => service_url,
           "topics_name" => ["logstashS"],
           "subscription_name" => "logstash-group-shared",
           "subscription_type" => "Shared",
@@ -110,7 +111,7 @@ RSpec.describe "LogStash::Inputs::Pulsar", :integration => true do
 
     let(:config) {
       {
-          "service_url" => "pulsar://localhost:6650",
+          "service_url" => service_url,
           "topics_name" => ["logstashF"],
           "subscription_name" => "logstash-group-failover",
           "subscription_type" => "Failover",
@@ -155,7 +156,7 @@ RSpec.describe "LogStash::Inputs::Pulsar", :integration => true do
 
     let(:config) {
       {
-          "service_url" => "pulsar://localhost:6650",
+          "service_url" => service_url,
           "topics_name" => ["multiE-1", "multiE-2", "multiE-3"],
           "subscription_name" => "logstash-group-exclusive",
           "subscription_type" => "Exclusive",
@@ -205,7 +206,7 @@ RSpec.describe "LogStash::Inputs::Pulsar", :integration => true do
 
     let(:config) {
       {
-          "service_url" => "pulsar://localhost:6650",
+          "service_url" => service_url,
           "topics_name" => ["multiS-1", "multiS-2", "multiS-3"],
           "subscription_name" => "logstash-group-shared",
           "subscription_type" => "Shared",
@@ -255,7 +256,7 @@ RSpec.describe "LogStash::Inputs::Pulsar", :integration => true do
 
     let(:config) {
       {
-          "service_url" => "pulsar://localhost:6650",
+          "service_url" => service_url,
           "topics_name" => ["multiF-1", "multiF-2", "multiF-3"],
           "subscription_name" => "logstash-group-failover",
           "subscription_type" => "Failover",
@@ -305,7 +306,7 @@ RSpec.describe "LogStash::Inputs::Pulsar", :integration => true do
 
     let(:config) {
       {
-          "service_url" => "pulsar://localhost:6650",
+          "service_url" => service_url,
           "topics_pattern" => "persistent://public/default/patternE-.*",
           "subscription_name" => "logstash-group-exclusive",
           "subscription_type" => "Exclusive",
@@ -355,7 +356,7 @@ RSpec.describe "LogStash::Inputs::Pulsar", :integration => true do
 
     let(:config) {
       {
-          "service_url" => "pulsar://localhost:6650",
+          "service_url" => service_url,
           "topics_pattern" => "persistent://public/default/patternS-.*",
           "subscription_name" => "logstash-group-shared",
           "subscription_type" => "Shared",
@@ -405,7 +406,7 @@ RSpec.describe "LogStash::Inputs::Pulsar", :integration => true do
 
     let(:config) {
       {
-          "service_url" => "pulsar://localhost:6650",
+          "service_url" => service_url,
           "topics_pattern" => "persistent://public/default/patternF-.*",
           "subscription_name" => "logstash-group-failover",
           "subscription_type" => "Failover",
@@ -449,7 +450,7 @@ RSpec.describe "LogStash::Inputs::Pulsar", :integration => true do
 
     let(:config) {
       {
-          "service_url" => "pulsar://localhost:6650",
+          "service_url" => service_url,
           "topics_pattern" => "persistent://public/default/partitionedE",
           "subscription_name" => "logstash-group-exclusive",
           "subscription_type" => "Exclusive",
@@ -489,7 +490,7 @@ RSpec.describe "LogStash::Inputs::Pulsar", :integration => true do
 
     let(:config) {
       {
-          "service_url" => "pulsar://localhost:6650",
+          "service_url" => service_url,
           "topics_pattern" => "persistent://public/default/partitionedS",
           "subscription_name" => "logstash-group-shared",
           "subscription_type" => "Shared",
@@ -529,7 +530,7 @@ RSpec.describe "LogStash::Inputs::Pulsar", :integration => true do
 
     let(:config) {
       {
-          "service_url" => "pulsar://localhost:6650",
+          "service_url" => service_url,
           "topics_pattern" => "persistent://public/default/partitionedF",
           "subscription_name" => "logstash-group-failover",
           "subscription_type" => "Failover",
@@ -569,7 +570,7 @@ RSpec.describe "LogStash::Inputs::Pulsar", :integration => true do
 
     let(:config) {
       {
-          "service_url" => "pulsar://localhost:6650",
+          "service_url" => service_url,
           "topics_name" => ["logstashDE"],
           "subscription_name" => "logstash-group-exclusive",
           "subscription_type" => "Exclusive",
@@ -590,7 +591,7 @@ RSpec.describe "LogStash::Inputs::Pulsar", :integration => true do
         expect(event.get("[@metadata][pulsar][topic]")).to eq("persistent://public/default/logstashDE")
         expect(event.get("[@metadata][pulsar][producer]")).to start_with("standalone")
         expect(event.get("[@metadata][pulsar][key]")).to be_falsey
-        expect(event.get("[@metadata][pulsar][timestamp]")).to be_falsey
+        expect(event.get("[@metadata][pulsar][timestamp]")).to to be > 0
       ensure
         t.kill
         t.join(30_000)

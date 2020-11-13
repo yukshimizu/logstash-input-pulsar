@@ -14,11 +14,14 @@ See following links for details about Pulsar client and consumer options.
 
 - https://pulsar.apache.org/docs/en/client-libraries-java/#client
 - https://pulsar.apache.org/docs/en/client-libraries-java/#consumer
+- https://pulsar.apache.org/docs/en/client-libraries-java/#athenz
 
 ```sh
 input {
     pulsar {
           service_url => ... # string (optional), default: "pulsar://localhost:6650", Service URL provider for Pulsar service.
+          proxy_service_url => ... # string (optional), Proxy service URL. Default is None.
+          proxy_protocol => ...# string (optional), Proxy protocol. e.g. SNI. Default is None.
           auth_plugin_class_name => ... # string (optional), Name of the authentication plugin. Default is None.
           auth_params => ... # string (optional), String represents parameters for the authentication plugin. Default is None.
           operation_timeout_ms => ... # number (optional), Operation timeout. Default is 30000.
@@ -52,7 +55,7 @@ input {
           priority_level => ... # number (optional), Priority level for a consumer to which a broker gives more priority while dispatching messages in the shared ubscription mode. Default is 0.
           crypto_failure_action => ... # string (optional), Consumer should take action when it receives a message that can not be decrypted. Default is ConsumerCryptoFailureAction.FAIL.
           properties =>  ... # hash (optional), A name or value property of this consumer. Properties is application defined metadata attached to a consumer. Default is new TreeMap<>().
-          read_compacted" => ... # boolean (optional), If enabling readCompacted, a consumer reads messages from a compacted topic rather than reading a full message backlog of a topic. Default is false.
+          read_compacted => ... # boolean (optional), If enabling readCompacted, a consumer reads messages from a compacted topic rather than reading a full message backlog of a topic. Default is false.
           subscription_initial_position => ... # string (optional), Initial position at which to set cursor when subscribing to a topic at first time. Default is SubscriptionInitialPosition.Latest.
           pattern_auto_discovery_period => ... # number (optional), Topic auto discovery period when using a pattern for topic's consumer. The default and minimum value is 1 minute.
           regex_subscription_mode => ... # number (optional), When subscribing to a topic using a regular expression, you can pick a certain type of topics: PersistentOnly, NonPersistentOnly, AllTopics. Default is RegexSubscriptionMode.PersistentOnly.
@@ -61,5 +64,24 @@ input {
           consumer_threads => ... # number (optional), default: 1, Number of consumer threads.
           decorate_events => ... # boolean (optional), default: false, Whether the Logstash plugin adds metadata to events.
     }
+}
+```
+Please note that you need to set **config.support_escapes to true** when you configure **auth_params** so that you can escape characters such as \n and \" in strings in the pipeline configuration files.
+Refer to https://www.elastic.co/guide/en/logstash/current/configuration-file-structure.html#_escape_sequences for more details.
+```
+# auth_params example
+
+input {
+  pulsar {
+    service_url => "pulsar+ssl://localhost:6651"
+    auth_plugin_class_name => "org.apache.pulsar.client.impl.auth.AuthenticationAthenz"
+    auth_params => "{\"tenantDomain\":\"shopping\",\"tenantService\":\"some_app\",\"providerDomain\":\"pulsar\",\"privateKey\":\"file:///path_to/some_app_private.pem\",\"keyId\":\"v0\",\"ztsUrl\":\"https://athenz.local:8443/zts/v1\"}"
+    topics_name => ["persistent://shopping/some_app/some_topic"]
+    subscription_name => "logstash-group-exclusive"
+    subscription_type => "Exclusive"
+    consumer_name => "logstash-client"
+    consumer_threads => 1
+    decorate_events => true
+  }
 }
 ```

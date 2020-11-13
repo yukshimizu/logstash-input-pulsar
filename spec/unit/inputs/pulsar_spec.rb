@@ -7,7 +7,7 @@ require "socket" # for Socket.gethostname
 
 RSpec.describe "LogStash::Inputs::Pulsar", :unit => true do
 
-  let(:version) { "0.1.0" }
+  let(:version) { "0.2.0" }
   let(:num_events) { 1 }
   let(:queue) { Queue.new }
 
@@ -16,9 +16,11 @@ RSpec.describe "LogStash::Inputs::Pulsar", :unit => true do
   describe "#register" do
     let(:config) {
       {
-          "service_url" => "pulsar://localhost:6650",
+          "service_url" => "pulsar+ssl://localhost:6651",
+          "proxy_service_url" => "pulsar+ssl://test-ats-proxy:443",
+          "proxy_protocol" => "SNI",
           "auth_plugin_class_name" => "auth_plugin_class_name",
-          "auth_params" => "auth_params",
+          "auth_params" => "{\"tenantDomain\":\"shopping\",\"tenantService\":\"some_app\",\"providerDomain\":\"pulsar\",\"privateKey\":\"file:///./private.pem\",\"keyId\":\"v1\"}",
           "operation_timeout_ms" => 30000,
           "stats_interval_seconds" => 60,
           "num_io_threads" => 1,
@@ -49,7 +51,7 @@ RSpec.describe "LogStash::Inputs::Pulsar", :unit => true do
           "tick_durations_millis" => 1000,
           "priority_level" => 0,
           "crypto_failure_action" => "FAIL",
-          "properties" => { "key" => "value"},
+          "properties" => {"key1" => "value1", "key2" => "value2"},
           "read_compacted" => false,
           "subscription_initial_position" => "Latest",
           "pattern_auto_discovery_period" => 1,
@@ -73,9 +75,9 @@ RSpec.describe "LogStash::Inputs::Pulsar", :unit => true do
   context  "creates pulsar client with valid configuration" do
     let(:config) {
       {
-          "service_url" => "pulsar://localhost:6650",
-          #"auth_plugin_class_name" => "auth_plugin_class_name",
-          "auth_params" => "auth_params",
+          "service_url" => "pulsar+ssl://localhost:6651",
+          "proxy_service_url" => "pulsar+ssl://test-ats-proxy:443",
+          "proxy_protocol" => "SNI",
           "operation_timeout_ms" => 30000,
           "stats_interval_seconds" => 60,
           "num_io_threads" => 1,
@@ -122,7 +124,7 @@ RSpec.describe "LogStash::Inputs::Pulsar", :unit => true do
     let(:config) {
       {
           "auth_plugin_class_name" => "auth_plugin_class_name",
-          "auth_params" => "auth_params",
+          "auth_params" => "auth_params"
       }
     }
 
@@ -135,6 +137,41 @@ RSpec.describe "LogStash::Inputs::Pulsar", :unit => true do
 
     after do
       pulsar.stop
+    end
+  end
+
+  context "creates pulsar client with auth_plugin configuration" do
+    let(:config) {
+      {
+          "auth_plugin_class_name" => "org.apache.pulsar.client.impl.auth.AuthenticationAthenz",
+          "auth_params" => "{\"tenantDomain\":\"shopping\",\"tenantService\":\"some_app\",\"providerDomain\":\"pulsar\",\"privateKey\":\"file:///tmp/private.pem\",\"keyId\":\"v1\"}"
+      }
+    }
+
+    before do
+      Open3.capture3("openssl genrsa -out /tmp/private.pem 2048")
+    end
+
+    it "successfully configure client" do
+
+      consumer_mock = double("Pulsar consumer")
+      allow(consumer_mock).to receive(:close)
+
+      consumer_builder_mock = double("Pulsar consumer builder")
+      allow(consumer_builder_mock).to receive(:subscribe).and_return(consumer_mock)
+
+      allow(pulsar).to receive(:create_consumer).and_return(consumer_builder_mock)
+      allow(pulsar).to receive(:stop?).and_return(true)
+
+      pulsar.register
+
+      expect { pulsar.run(queue) }.to_not raise_error
+      expect(queue.length).to eq(0)
+    end
+
+    after do
+      pulsar.stop
+      Open3.capture3("rm /tmp/private.pem")
     end
   end
 
@@ -154,7 +191,7 @@ RSpec.describe "LogStash::Inputs::Pulsar", :unit => true do
           "tick_durations_millis" => 1000,
           "priority_level" => 0,
           "crypto_failure_action" => "FAIL",
-          "properties" => { "key" => "value"},
+          "properties" => { "key1" => "value1", "key2" => "value2"},
           "read_compacted" => false,
           "subscription_initial_position" => "Latest",
           "pattern_auto_discovery_period" => 1,
@@ -201,6 +238,60 @@ RSpec.describe "LogStash::Inputs::Pulsar", :unit => true do
 
     after do
       pulsar.stop
+    end
+  end
+
+  context "creates pulsar consumer builder with auth_plugin configuration" do
+    let(:config) {
+      {
+          "auth_plugin_class_name" => "org.apache.pulsar.client.impl.auth.AuthenticationAthenz",
+          "auth_params" => "{\"tenantDomain\":\"shopping\",\"tenantService\":\"some_app\",\"providerDomain\":\"pulsar\",\"privateKey\":\"file:///tmp/private.pem\",\"keyId\":\"v1\"}",
+          "topics_name" => ["logstash"],
+          "topics_pattern" => "persistent://public/default/finance-.*",
+          "subscription_name" => "logstash-group",
+          "subscription_type" => "Exclusive",
+          "receive_queue_size" => 1000,
+          "acknowledgements_group_time_micros" => 100000,
+          "negative_ack_redelivery_delay_micros" => 60000000,
+          "max_total_receive_queue_size_across_partitions" => 5000,
+          "consumer_name" => "logstash-client",
+          "ack_timeout_millis" => 0,
+          "tick_durations_millis" => 1000,
+          "priority_level" => 0,
+          "crypto_failure_action" => "FAIL",
+          "properties" => { "key1" => "value1", "key2" => "value2"},
+          "read_compacted" => false,
+          "subscription_initial_position" => "Latest",
+          "pattern_auto_discovery_period" => 1,
+          "regex_subscription_mode" => "PersistentOnly",
+          "auto_update_partitions" => true,
+          "replicate_subscription_state" => false,
+          "consumer_threads" => 1,
+          "decorate_events" => false
+      }
+    }
+
+    before do
+      Open3.capture3("openssl genrsa -out /tmp/private.pem 2048")
+    end
+
+    it "successfully configure consumer builder" do
+
+      consumer_thread_mock = double("Pulsar consumer thread")
+      allow(consumer_thread_mock).to receive(:join)
+      allow(consumer_thread_mock).to receive(:exit)
+
+      allow(pulsar).to receive(:thread_runner).and_return(consumer_thread_mock)
+
+      pulsar.register
+
+      expect { pulsar.run(queue) }.to_not raise_error
+      expect(queue.length).to eq(0)
+    end
+
+    after do
+      pulsar.stop
+      Open3.capture3("rm /tmp/private.pem")
     end
   end
 
@@ -297,7 +388,7 @@ RSpec.describe "LogStash::Inputs::Pulsar", :unit => true do
       allow(message_mock).to receive(:getTopicName).and_return("logstash")
       allow(message_mock).to receive(:getProducerName).and_return("producer")
       allow(message_mock).to receive(:getKey).and_return("key")
-      allow(message_mock).to receive(:getEventTime).and_return(1601354923)
+      allow(message_mock).to receive(:getPublishTime).and_return(1601354923)
       allow(message_mock).to receive(:hasKey).and_return(true)
 
       consumer_mock = double("pulsar consumer")
