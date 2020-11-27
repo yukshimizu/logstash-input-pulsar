@@ -17,8 +17,9 @@ RSpec.describe "LogStash::Inputs::Pulsar", :unit => true do
     let(:config) {
       {
           "service_url" => "pulsar+ssl://localhost:6651",
-          "proxy_service_url" => "pulsar+ssl://test-ats-proxy:443",
-          "proxy_protocol" => "SNI",
+          # The following two lines are commented out because Proxy is not supported with Pulsar 2.4.2.
+          # "proxy_service_url" => "pulsar+ssl://test-ats-proxy:443",
+          # "proxy_protocol" => "SNI",
           "auth_plugin_class_name" => "auth_plugin_class_name",
           "auth_params" => "{\"tenantDomain\":\"shopping\",\"tenantService\":\"some_app\",\"providerDomain\":\"pulsar\",\"privateKey\":\"file:///./private.pem\",\"keyId\":\"v1\"}",
           "operation_timeout_ms" => 30000,
@@ -76,8 +77,9 @@ RSpec.describe "LogStash::Inputs::Pulsar", :unit => true do
     let(:config) {
       {
           "service_url" => "pulsar+ssl://localhost:6651",
-          "proxy_service_url" => "pulsar+ssl://test-ats-proxy:443",
-          "proxy_protocol" => "SNI",
+          # The following two lines are commented out because Proxy is not supported with Pulsar 2.4.2.
+          # "proxy_service_url" => "pulsar+ssl://test-ats-proxy:443",
+          # "proxy_protocol" => "SNI",
           "operation_timeout_ms" => 30000,
           "stats_interval_seconds" => 60,
           "num_io_threads" => 1,

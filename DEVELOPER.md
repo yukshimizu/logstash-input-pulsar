@@ -7,7 +7,7 @@ For more information about Pulsar, refer to this [documentation](https://pulsar.
 Information about Pulsar client libraries can be found [here](https://pulsar.apache.org/docs/en/client-libraries-java/).
 
 ## Dependencies
-- Apache Pulsar version 2.6.1
+- Apache Pulsar version 2.4.1
 
 ## Logstash Configuration
 See following links for details about Pulsar client and consumer options.
@@ -20,8 +20,6 @@ See following links for details about Pulsar client and consumer options.
 input {
     pulsar {
           service_url => ... # string (optional), default: "pulsar://localhost:6650", Service URL provider for Pulsar service.
-          proxy_service_url => ... # string (optional), Proxy service URL. Default is None.
-          proxy_protocol => ...# string (optional), Proxy protocol. e.g. SNI. Default is None.
           auth_plugin_class_name => ... # string (optional), Name of the authentication plugin. Default is None.
           auth_params => ... # string (optional), String represents parameters for the authentication plugin. Default is None.
           operation_timeout_ms => ... # number (optional), Operation timeout. Default is 30000.

@@ -18,10 +18,11 @@ class LogStash::Inputs::Pulsar < LogStash::Inputs::Base
   #
   # Service URL provider for Pulsar service. Default is None.
   config :service_url, :validate => :string, :default => "pulsar://localhost:6650"
+  # The following two lines are commented out because Proxy is not supported with Pulsar 2.4.2.
   # Proxy service URL. Default is None.
-  config :proxy_service_url, :validate => :string
+  # config :proxy_service_url, :validate => :string
   # Proxy protocol. e.g. SNI. Default is None.
-  config :proxy_protocol, :validate => :string
+  # config :proxy_protocol, :validate => :string
   # Name of the authentication plugin. Default is None.
   config :auth_plugin_class_name, :validate => :string
   # String represents parameters for the authentication plugin. Example: key1:val1,key2:val2. Default is None.
@@ -224,8 +225,9 @@ class LogStash::Inputs::Pulsar < LogStash::Inputs::Base
       # Configure Pulsar Client loadconf
       client_config = java.util.HashMap.new
       client_config.put("serviceUrl", @service_url)
-      client_config.put("proxyServiceUrl", @proxy_service_url) unless @proxy_service_url.nil?
-      client_config.put("proxyProtocol", @proxy_protocol) unless @proxy_protocol.nil?
+      # The following two lines are commented out because Proxy is not supported with Pulsar 2.4.2.
+      # client_config.put("proxyServiceUrl", @proxy_service_url) unless @proxy_service_url.nil?
+      # client_config.put("proxyProtocol", @proxy_protocol) unless @proxy_protocol.nil?
       client_config.put("authPluginClassName", @auth_plugin_class_name) unless @auth_plugin_class_name.nil?
       client_config.put("authParams", @auth_params) unless @auth_params.nil?
       client_config.put("operationTimeoutMs", @operation_timeout_ms) unless @operation_timeout_ms.nil?
@@ -243,7 +245,7 @@ class LogStash::Inputs::Pulsar < LogStash::Inputs::Base
       client_config.put("keepAliveIntervalSeconds", @keep_alive_interval_seconds) unless @keep_alive_interval_seconds.nil?
       client_config.put("connectionTimeoutMs", @connection_timeout_ms) unless @connection_timeout_ms.nil?
       client_config.put("requestTimeoutMs", @request_timeout_ms) unless @request_timeout_ms.nil?
-      client_config.put("initialBackoffIntervalNanos", @default_backoff_interval_nanos) unless @default_backoff_interval_nanos.nil?
+      client_config.put("defaultBackoffIntervalNanos", @default_backoff_interval_nanos) unless @default_backoff_interval_nanos.nil?
       client_config.put("maxBackoffIntervalNanos", @max_backoff_interval_nanos) unless @max_backoff_interval_nanos.nil?
 
       client_builder = org.apache.pulsar.client.api.PulsarClient.builder

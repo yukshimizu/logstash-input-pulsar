@@ -18,8 +18,8 @@ Gem::Specification.new do |s|
   s.metadata = { "logstash_plugin" => "true", "logstash_group" => "input" }
 
   # Jar dependencies
-  s.requirements << "jar 'org.apache.pulsar:pulsar-client', '2.6.1'"
-  s.requirements << "jar 'org.apache.pulsar:pulsar-client-auth-athenz', '2.6.1'"
+  s.requirements << "jar 'org.apache.pulsar:pulsar-client', '2.4.1'"
+  s.requirements << "jar 'org.apache.pulsar:pulsar-client-auth-athenz', '2.4.1'"
   s.add_development_dependency 'jar-dependencies'
   s.add_runtime_dependency 'jar-dependencies'
 
